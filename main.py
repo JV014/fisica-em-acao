@@ -41,9 +41,7 @@ clock = pygame.time.Clock()
 # CARREGAR IMAGEM
 # ======================================
 
-car_image = pygame.image.load(
-    "assets/images/car.png"
-).convert_alpha()
+car_image = pygame.image.load("assets/images/car.png")
 
 car_image = pygame.transform.scale(
     car_image,
