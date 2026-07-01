@@ -35,8 +35,8 @@ jobs:
 
       - name: Compilar jogo
         run: |
-         python -m pygbag .
-
+         python -m pygbag --build .
+         
       - name: Upload do site
         uses: actions/upload-pages-artifact@v3
         with:
