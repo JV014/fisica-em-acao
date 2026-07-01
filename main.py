@@ -53,6 +53,7 @@ car_image = pygame.transform.scale(
 # ======================================
 
 road = Road()
+print("road ok")
 
 car = Car(
     50,
@@ -61,22 +62,34 @@ car = Car(
 )
 
 car.vx = 60
+print("car ok")
+
 
 menu = Menu()
+print("menu ok")
 
 intro = Intro()
+print("intro ok")
 
 question = Question()
+print("question ok")
 
 feedback = Feedback()
+print("feedback ok")
 
 simulation = Simulation()
+print("simulation ok")
 
 result = Result()
+print("result ok")
 
 phase = Phase()
+print("phase ok")
 
 credits = Credits()
+print("credits ok")
+
+
 
 game_state = MENU
 
