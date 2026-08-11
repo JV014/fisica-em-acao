@@ -76,7 +76,7 @@ class Menu:
         y = box_y + 15
         for i, option in enumerate(self.options):
             color = YELLOW if i == self.selected else WHITE
-            text_str = f"►  {option}  ◄" if i == self.selected else f"    {option}    "
+            text_str = f"- {option} -" if i == self.selected else f"    {option}    "
 
             text = self.menu_font.render(text_str, True, color)
             screen.blit(text, (WIDTH // 2 - text.get_width() // 2, y))

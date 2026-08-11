@@ -164,7 +164,7 @@ class Question:
         y = q_y + 15
         for i, option in enumerate(q["options"]):
             color = YELLOW if i == self.selected else WHITE
-            prefix = "► " if i == self.selected else "   "
+            prefix = "x " if i == self.selected else "  "
             opt_render = self.option_font.render(prefix + option, True, color)
             screen.blit(opt_render, (160, y))
             y += 38
