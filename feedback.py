@@ -31,14 +31,14 @@ class Feedback:
 
             self.message = (
                 "Muito bem! Você acertou a questão."
-                "Ganhou 10 pontos."
+                "Ganhou 10 pontos! Uhul!"
             )
 
         else:
 
             self.message = (
-                "Resposta incorreta. Tente novamente."
-                "Perdeu 5 pontos."
+                "Resposta incorreta. Não ganhou pontos."
+                "Tenha atenção!Affs!"
             )
 
     # ======================================

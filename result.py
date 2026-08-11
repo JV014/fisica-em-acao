@@ -2,96 +2,26 @@ import pygame
 from settings import *
 
 class Result:
-
     def __init__(self):
-
-        self.title = pygame.font.SysFont(
-            "Arial",
-            46,
-            bold=True
-        )
-
-        self.font = pygame.font.SysFont(
-            "Arial",
-            30
-        )
+        self.title_font = pygame.font.SysFont("Arial", 44, bold=True)
+        self.text_font = pygame.font.SysFont("Arial", 22)
+        self.small_font = pygame.font.SysFont("Arial", 20)
 
     def draw(self, screen, score):
+        # Removido o screen.fill para aparecer a estrada/paisagem ao fundo
 
-        screen.fill((20, 40, 100))
+        panel = pygame.Rect(120, 80, 760, 420)
+        pygame.draw.rect(screen, (35, 35, 35), panel, border_radius=15)
+        pygame.draw.rect(screen, WHITE, panel, 3, border_radius=15)
 
-        txt = self.title.render(
+        title = self.title_font.render("FIM DA CAMPANHA!", True, YELLOW)
+        screen.blit(title, (WIDTH // 2 - title.get_width() // 2, 120))
 
-            "MISSÃO CONCLUÍDA!",
+        score_text = self.title_font.render(f"Pontuação Final: {score} pontos", True, WHITE)
+        screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 220))
 
-            True,
+        msg = self.text_font.render("Show, você concluiu a campanha! Veja seus pontos e reflita se precisa de mais prática.", True, (200, 220, 255))
+        screen.blit(msg, (WIDTH // 2 - msg.get_width() // 2, 310))
 
-            WHITE
-
-        )
-
-        screen.blit(
-
-            txt,
-
-            (
-                WIDTH//2-txt.get_width()//2,
-                100
-            )
-        )
-
-        pts = self.font.render(
-
-            f"Pontuação: {score}/150",
-
-            True,
-
-            YELLOW
-
-        )
-
-        screen.blit(
-
-            pts,
-
-            (
-                WIDTH//2-pts.get_width()//2,
-                220
-            )
-        )
-
-        if score == 150:
-
-            msg = "Excelente!"
-
-        elif score >= 50:
-
-            msg = "Muito bom!"
-
-        elif score >= 100:
-
-            msg = "Bom trabalho!"
-
-        else:
-
-            msg = "Continue estudando!"
-
-        texto = self.font.render(
-
-            msg,
-
-            True,
-
-            WHITE
-
-        )
-
-        screen.blit(
-
-            texto,
-
-            (
-                WIDTH//2-texto.get_width()//2,
-                320
-            )
-        )
+        footer = self.small_font.render("Pressione ENTER para retornar ao Menu Principal", True, YELLOW)
+        screen.blit(footer, (WIDTH // 2 - footer.get_width() // 2, 420))

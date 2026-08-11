@@ -11,7 +11,6 @@ class Credits:
 
     def draw(self, screen):
 
-        screen.fill((20, 40, 100))
 
         panel = pygame.Rect(120, 50, 760, 500)
 
@@ -37,13 +36,13 @@ class Credits:
 
             "",
 
-            "Tecnologias",
+            "Tecnologia no Ensino de Física",
             "Python",
             "Pygame",
 
             "",
 
-            "Versão 1.0 - 2026"
+            "Versão 2.0 - 2026"
 
         ]
 
