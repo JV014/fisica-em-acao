@@ -120,7 +120,7 @@ class Multiplayer:
             y = 160
             for i, opt in enumerate(q["options"]):
                 color = (255, 255, 100) if i == self.selected_p1 else WHITE
-                screen.blit(self.option_font.render(("► " if i == self.selected_p1 else "   ") + opt, True, color), (30, y))
+                screen.blit(self.option_font.render(("x " if i == self.selected_p1 else "   ") + opt, True, color), (30, y))
                 y = y + 45
             screen.blit(self.info_font.render("PRONTO!" if self.p1_submitted else "Escolhendo (W/S + ENTER)...", True, (100, 255, 100) if self.p1_submitted else (200, 200, 200)), (30, HEIGHT - 95))
 
@@ -135,9 +135,9 @@ class Multiplayer:
             y = 160
             for i, opt in enumerate(q["options"]):
                 color = (255, 255, 100) if i == self.selected_p2 else WHITE
-                screen.blit(self.option_font.render(("► " if i == self.selected_p2 else "   ") + opt, True, color), (half_w + 25, y))
+                screen.blit(self.option_font.render(("x " if i == self.selected_p2 else "   ") + opt, True, color), (half_w + 25, y))
                 y = y + 45
-            screen.blit(self.info_font.render("PRONTO!" if self.p2_submitted else "Escolhendo (I/K + ESPAÇO)...", True, (100, 255, 100) if self.p2_submitted else (200, 200, 200)), (half_w + 25, HEIGHT - 95))
+            screen.blit(self.info_font.render("PRONTO!" if self.p2_submitted else "Escolhendo ([↑ / ↓] + ESPAÇO)...", True, (100, 255, 100) if self.p2_submitted else (200, 200, 200)), (half_w + 25, HEIGHT - 95))
 
             pygame.draw.line(screen, YELLOW, (half_w, 10), (half_w, HEIGHT - 65), 3)
             badge_rect = pygame.Rect(half_w - 55, 15, 110, 30)

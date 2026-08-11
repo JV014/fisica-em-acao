@@ -1,5 +1,6 @@
 import pygame
 import math
+import random
 from settings import *
 
 class TargetChallenge:
@@ -31,9 +32,9 @@ class TargetChallenge:
         self.score = 0
         self.score_added = False
         
-        # Controle de tentativas para a campanha
-        self.max_attempts = 3
-        self.attempts_left = 3
+        # Controle de tentativas ajustado para 2 chances
+        self.max_attempts = 2
+        self.attempts_left = 2
         
         self.font = pygame.font.SysFont("Arial", 18)
         self.title_font = pygame.font.SysFont("Arial", 26, bold=True)
@@ -46,7 +47,7 @@ class TargetChallenge:
         self.all_completed = False
         self.hit = False
         self.score_added = False
-        self.attempts_left = 3
+        self.attempts_left = 2 # Garante 2 tentativas ao iniciar
         
         if self.campaign_mode:
             self.target_distance = 150.0  
@@ -92,11 +93,10 @@ class TargetChallenge:
                         else:
                             self.score += 50  
                 else:
-                    # Se errou no modo campanha, consome uma tentativa
-                    if self.campaign_mode:
-                        self.attempts_left -= 1
-                        if self.attempts_left <= 0:
-                            self.all_completed = True # Acabaram as tentativas
+                    # Se errou, consome uma tentativa (tanto no isolado quanto na campanha)
+                    self.attempts_left -= 1
+                    if self.attempts_left <= 0:
+                        self.all_completed = True # Acabaram as 2 tentativas
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -111,7 +111,7 @@ class TargetChallenge:
                     elif event.key == pygame.K_DOWN:
                         self.angle = max(5.0, self.angle - 1.0)
                     elif event.key == pygame.K_SPACE:
-                        if not self.projectile_fired:
+                        if not self.projectile_fired and self.attempts_left > 0:
                             self.reset_projectile()
                             self.projectile_fired = True
                 else:
@@ -122,9 +122,14 @@ class TargetChallenge:
                             self.current_target_index += 1
                             if self.current_target_index < len(self.targets):
                                 self.target_distance = self.targets[self.current_target_index]
+                                self.attempts_left = 2 # Renova as 2 tentativas para o próximo alvo do modo isolado
                                 self.reset_projectile()
                             else:
                                 self.all_completed = True
+            else:
+                # Se acabou as tentativas ou o desafio, permite reiniciar com R (modo isolado)
+                if event.key == pygame.K_r and not self.campaign_mode:
+                    self.set_mode(is_campaign=False)
 
     def draw(self, screen):
         screen.fill((230, 245, 255))
@@ -156,9 +161,9 @@ class TargetChallenge:
         pygame.draw.rect(screen, YELLOW, panel, 2, border_radius=10)
         
         if self.campaign_mode:
-            title = self.title_font.render(f"MISSÃO FINAL: TIRO AO ALVO (Tentativas: {self.attempts_left}/3)", True, YELLOW)
+            title = self.title_font.render(f"MISSÃO FINAL: TIRO AO ALVO (Tentativas: {self.attempts_left}/2)", True, YELLOW)
         else:
-            title = self.title_font.render(f"DESAFIO TIRO AO ALVO (Fase {self.current_target_index + 1}/5)", True, YELLOW)
+            title = self.title_font.render(f"DESAFIO TIRO AO ALVO (Fase {self.current_target_index + 1}/5) - [Tentativas: {self.attempts_left}/2]", True, YELLOW)
         screen.blit(title, (WIDTH//2 - title.get_width()//2, 30))
         
         if not self.all_completed:
@@ -194,9 +199,12 @@ class TargetChallenge:
             pygame.draw.rect(screen, (20, 40, 100), end_bg, border_radius=15)
             pygame.draw.rect(screen, YELLOW, end_bg, 3, border_radius=15)
             
-            if self.campaign_mode and self.attempts_left <= 0 and not self.hit:
+            if self.attempts_left <= 0 and not self.hit:
                 end_t1 = self.success_font.render("FIM DAS TENTATIVAS!", True, (255, 100, 100))
-                end_t2 = self.font.render("Você esgotou suas 3 tentativas na campanha.", True, WHITE)
+                if self.campaign_mode:
+                    end_t2 = self.font.render("Você esgotou suas 2 tentativas na campanha.", True, WHITE)
+                else:
+                    end_t2 = self.font.render("Suas 2 tentativas acabaram! Pressione [R] para tentar.", True, WHITE)
             else:
                 end_t1 = self.success_font.render("PARABÉNS!", True, YELLOW)
                 if self.campaign_mode:
