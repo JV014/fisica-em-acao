@@ -20,7 +20,7 @@ class Result:
         score_text = self.title_font.render(f"Pontuação Final: {score} pontos", True, WHITE)
         screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 220))
 
-        msg = self.text_font.render("Show, você concluiu a campanha! Veja seus pontos e reflita se precisa de mais prática.", True, (200, 220, 255))
+        msg = self.text_font.render("Show, você concluiu a campanha! Reflita se precisa de mais prática.", True, (200, 220, 255))
         screen.blit(msg, (WIDTH // 2 - msg.get_width() // 2, 310))
 
         footer = self.small_font.render("Pressione ENTER para retornar ao Menu Principal", True, YELLOW)
