@@ -19,12 +19,12 @@ class Intro:
             "Olá, seja bem-vindo ao Modo Campanha Individual de Cinemática!",
 
             "Esse jogo tem como objetivo explorar os conceitos de Cinemática: MU e MUV.",
-            "No caso de alunos de Ensino médio, o jogo oferece desafios mais avançados, incluindo",
-            "o Lançamento de Projéteis e Tiro ao Alvo.",
+            "No caso de alunos de Ensino médio, o jogo oferece desafios mais avançados",
+            "incluindo o Lançamento de Projéteis e Tiro ao Alvo.",
             "O jogo é dividido em 5 fases:",
             "Fase 1: Conceitos Básicos de Cinemática (Ensino Fundamental e Médio)",
             "Fase 2: Cinemática de Movimento Uniforme (Ensino Fundamental e Médio)",
-            "Fase 3: Cinemática de Movimento Uniformemente Variado (Ensino Fundamental e Médio)",
+            "Fase 3: Cinemática de Movimento Unif. Variado (Ensino Fundamental e Médio)",
             "Fase 4: Lançamento de Projéteis (Ensino Médio)",
             "Fase 5: Tiro ao Alvo (Ensino Médio)",
             "Esperamos que você se divirta e aprenda bastante!"        ]

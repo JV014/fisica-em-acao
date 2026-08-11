@@ -30,14 +30,14 @@ class Feedback:
         if correct:
 
             self.message = (
-                "Muito bem! Você acertou a questão."
+                "Muito bem! Você acertou a questão.\n"
                 "Ganhou 10 pontos! Uhul!"
             )
 
         else:
 
             self.message = (
-                "Resposta incorreta. Não ganhou pontos."
+                "Resposta incorreta. Não ganhou pontos.\n"
                 "Tenha atenção!Affs!"
             )
 
