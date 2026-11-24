@@ -12,6 +12,10 @@ class Multiplayer:
         self.p1_submitted = False
         self.p2_submitted = False
         self.show_feedback = False
+        
+        self.p1_name = "Jogador 1"
+        self.p2_name = "Jogador 2"
+        self.score_saved = False
 
         try:
             self.car_img = pygame.image.load("assets/images/car.png")
@@ -55,6 +59,7 @@ class Multiplayer:
         self.p2_submitted = False
         self.show_feedback = False
         self.car_x = -130
+        self.score_saved = False
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -63,7 +68,6 @@ class Multiplayer:
                 total_opts = len(current_q["options"])
 
                 if not self.show_feedback:
-                    # Jogador 1: W / S e ENTER
                     if not self.p1_submitted:
                         if event.key == pygame.K_s: 
                             self.selected_p1 = (self.selected_p1 + 1) % total_opts
@@ -72,7 +76,6 @@ class Multiplayer:
                         elif event.key == pygame.K_RETURN: 
                             self.p1_submitted = True
 
-                    # Jogador 2: Setas para cima / baixo e ESPAÇO
                     if not self.p2_submitted:
                         if event.key == pygame.K_DOWN: 
                             self.selected_p2 = (self.selected_p2 + 1) % total_opts
@@ -82,8 +85,10 @@ class Multiplayer:
                             self.p2_submitted = True
 
                     if self.p1_submitted and self.p2_submitted:
-                        if self.selected_p1 == current_q["correct"]: self.score_p1 += 10
-                        if self.selected_p2 == current_q["correct"]: self.score_p2 += 10
+                        if self.selected_p1 == current_q["correct"]:
+                            self.score_p1 += 10
+                        if self.selected_p2 == current_q["correct"]:
+                            self.score_p2 += 10
                         self.show_feedback = True
                 else:
                     if event.key in [pygame.K_RETURN, pygame.K_SPACE]:
@@ -100,7 +105,8 @@ class Multiplayer:
     def update(self, dt):
         if not self.finished():
             self.car_x += self.car_speed * dt
-            if self.car_x > WIDTH: self.car_x = -130
+            if self.car_x > WIDTH:
+                self.car_x = -130
 
     def draw(self, screen):
         screen.fill((20, 20, 25))
@@ -109,11 +115,11 @@ class Multiplayer:
             q = self.all_questions[self.index]
             half_w = WIDTH // 2
 
-            # P1
+            # P1 (Esquerda)
             p1_bg = pygame.Rect(10, 10, half_w - 15, HEIGHT - 65)
             pygame.draw.rect(screen, (25, 40, 60), p1_bg, border_radius=12)
             pygame.draw.rect(screen, (100, 200, 255), p1_bg, 2, border_radius=12)
-            screen.blit(self.title_font.render("JOGADOR 1", True, (100, 200, 255)), (30, 25))
+            screen.blit(self.title_font.render(self.p1_name.upper(), True, (100, 200, 255)), (30, 25))
             screen.blit(self.info_font.render(f"Pontos: {self.score_p1}", True, WHITE), (30, 60))
             screen.blit(self.question_font.render(q["question"], True, WHITE), (30, 100))
 
@@ -124,12 +130,15 @@ class Multiplayer:
                 y = y + 45
             screen.blit(self.info_font.render("PRONTO!" if self.p1_submitted else "Escolhendo (W/S + ENTER)...", True, (100, 255, 100) if self.p1_submitted else (200, 200, 200)), (30, HEIGHT - 95))
 
-            # P2
+            # P2 (Direita)
             p2_bg = pygame.Rect(half_w + 5, 10, half_w - 15, HEIGHT - 65)
             pygame.draw.rect(screen, (60, 50, 25), p2_bg, border_radius=12)
             pygame.draw.rect(screen, (255, 255, 100), p2_bg, 2, border_radius=12)
-            screen.blit(self.title_font.render("JOGADOR 2", True, (255, 255, 100)), (half_w + 25, 25))
-            screen.blit(self.info_font.render(f"Pontos: {self.score_p2}", True, WHITE), (half_w + 25, 60))
+            
+            p2_title_surf = self.title_font.render(self.p2_name.upper(), True, (255, 255, 100))
+            p2_score_surf = self.info_font.render(f"Pontos: {self.score_p2}", True, WHITE)
+            screen.blit(p2_title_surf, (WIDTH - 30 - p2_title_surf.get_width(), 25))
+            screen.blit(p2_score_surf, (WIDTH - 30 - p2_score_surf.get_width(), 60))
             screen.blit(self.question_font.render(q["question"], True, WHITE), (half_w + 25, 100))
 
             y = 160
@@ -139,11 +148,13 @@ class Multiplayer:
                 y = y + 45
             screen.blit(self.info_font.render("PRONTO!" if self.p2_submitted else "Escolhendo ([↑ / ↓] + ESPAÇO)...", True, (100, 255, 100) if self.p2_submitted else (200, 200, 200)), (half_w + 25, HEIGHT - 95))
 
+            # Etiqueta Central
             pygame.draw.line(screen, YELLOW, (half_w, 10), (half_w, HEIGHT - 65), 3)
             badge_rect = pygame.Rect(half_w - 55, 15, 110, 30)
             pygame.draw.rect(screen, (30, 30, 35), badge_rect, border_radius=8)
             pygame.draw.rect(screen, YELLOW, badge_rect, 2, border_radius=8)
-            screen.blit(self.info_font.render(f"Q: {self.index + 1}/{len(self.all_questions)}", True, YELLOW), (half_w - 35, 20))
+            q_badge_surf = self.info_font.render(f"Q: {self.index + 1}/{len(self.all_questions)}", True, YELLOW)
+            screen.blit(q_badge_surf, (badge_rect.centerx - q_badge_surf.get_width() // 2, badge_rect.centery - q_badge_surf.get_height() // 2))
 
             # Pista inferior
             track_y = HEIGHT - 55
@@ -152,7 +163,8 @@ class Multiplayer:
             offset = int(self.car_x * 1.5) % 40
             for dash_x in range(-40, WIDTH + 40, 40):
                 pygame.draw.rect(screen, YELLOW, (dash_x - offset, track_y + 25, 20, 4))
-            if self.car_img: screen.blit(self.car_img, (int(self.car_x), track_y + 5))
+            if self.car_img:
+                screen.blit(self.car_img, (int(self.car_x), track_y + 5))
 
             if self.show_feedback:
                 fb_rect = pygame.Rect(WIDTH // 2 - 250, HEIGHT // 2 - 50, 500, 100)
@@ -161,7 +173,6 @@ class Multiplayer:
                 screen.blit(self.title_font.render(f"Gabarito: Alternativa {chr(65 + q['correct'])}", True, YELLOW), (WIDTH // 2 - 130, HEIGHT // 2 - 35))
                 screen.blit(self.info_font.render("Pressione [ENTER] ou [ESPAÇO] para continuar", True, WHITE), (WIDTH // 2 - 170, HEIGHT // 2 + 10))
         else:
-            # TELA FINAL DO MULTIPLAYER (FORÇADA E GARANTIDA)
             end_rect = pygame.Rect(WIDTH // 2 - 320, HEIGHT // 2 - 180, 640, 360)
             pygame.draw.rect(screen, (35, 40, 55), end_rect, border_radius=15)
             pygame.draw.rect(screen, YELLOW, end_rect, 3, border_radius=15)
@@ -170,17 +181,17 @@ class Multiplayer:
             screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, end_rect.y + 25))
             
             if self.score_p1 > self.score_p2:
-                msg = "VENCEDOR: JOGADOR 1!"
+                msg = f"VENCEDOR: {self.p1_name.upper()}!"
             elif self.score_p2 > self.score_p1:
-                msg = "VENCEDOR: JOGADOR 2!"
+                msg = f"VENCEDOR: {self.p2_name.upper()}!"
             else:
                 msg = "EMPATE TÉCNICO!"
                 
             winner_text = self.title_font.render(msg, True, WHITE)
             screen.blit(winner_text, (WIDTH // 2 - winner_text.get_width() // 2, end_rect.y + 90))
             
-            p1_text = self.title_font.render(f"Placar Jogador 1: {self.score_p1} pts", True, (100, 200, 255))
-            p2_text = self.title_font.render(f"Placar Jogador 2: {self.score_p2} pts", True, (255, 255, 100))
+            p1_text = self.title_font.render(f"{self.p1_name}: {self.score_p1} pts", True, (100, 200, 255))
+            p2_text = self.title_font.render(f"{self.p2_name}: {self.score_p2} pts", True, (255, 255, 100))
             
             screen.blit(p1_text, (WIDTH // 2 - p1_text.get_width() // 2, end_rect.y + 150))
             screen.blit(p2_text, (WIDTH // 2 - p2_text.get_width() // 2, end_rect.y + 195))

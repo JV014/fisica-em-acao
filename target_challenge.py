@@ -31,8 +31,8 @@ class TargetChallenge:
         
         self.score = 0
         self.score_added = False
+        self.score_saved = False
         
-        # Controle de tentativas ajustado para 2 chances
         self.max_attempts = 2
         self.attempts_left = 2
         
@@ -47,7 +47,8 @@ class TargetChallenge:
         self.all_completed = False
         self.hit = False
         self.score_added = False
-        self.attempts_left = 2 # Garante 2 tentativas ao iniciar
+        self.score_saved = False
+        self.attempts_left = 2
         
         if self.campaign_mode:
             self.target_distance = 150.0  
@@ -93,10 +94,9 @@ class TargetChallenge:
                         else:
                             self.score += 50  
                 else:
-                    # Se errou, consome uma tentativa (tanto no isolado quanto na campanha)
                     self.attempts_left -= 1
                     if self.attempts_left <= 0:
-                        self.all_completed = True # Acabaram as 2 tentativas
+                        self.all_completed = True
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -122,12 +122,11 @@ class TargetChallenge:
                             self.current_target_index += 1
                             if self.current_target_index < len(self.targets):
                                 self.target_distance = self.targets[self.current_target_index]
-                                self.attempts_left = 2 # Renova as 2 tentativas para o próximo alvo do modo isolado
+                                self.attempts_left = 2
                                 self.reset_projectile()
                             else:
                                 self.all_completed = True
             else:
-                # Se acabou as tentativas ou o desafio, permite reiniciar com R (modo isolado)
                 if event.key == pygame.K_r and not self.campaign_mode:
                     self.set_mode(is_campaign=False)
 
