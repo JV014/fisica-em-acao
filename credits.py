@@ -42,7 +42,7 @@ class Credits:
 
             "",
 
-            "Versão 2.0 - 2026"
+            "Versão 3.0 - 2026"
 
         ]
 
