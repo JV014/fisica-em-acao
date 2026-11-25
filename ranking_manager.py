@@ -3,7 +3,7 @@ import sys
 import urllib.request
 import urllib.parse
 
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxc73Sv4bDlVZLlCFo_XX5WOfdaETNQHSXYyV5M67bAsnG_JiaXUsRkVRc71X9W4BTQZg/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzC3lBc9BXnlNZNn-Axa9hPgeNgpcHSB5nOoOTKkxXJWA2el0DRcJSnb37QyRvhWFfMPA/exec"
 
 IS_WEB = (sys.platform == "emscripten")
 
@@ -14,6 +14,7 @@ class RankingManager:
     def __init__(self):
         self.url = GOOGLE_SCRIPT_URL
         self.is_syncing = False
+        self.sync_error = ""
         self.data = {
             "total_players_count": 0,
             "registered_players": [],
@@ -33,7 +34,8 @@ class RankingManager:
 
         try:
             if IS_WEB:
-                resp = await platform.window.fetch(full_url)
+                opts = platform.window.eval('({method: "GET", redirect: "follow", credentials: "omit"})')
+                resp = await platform.window.fetch(full_url, opts)
                 text = await resp.text()
                 return json.loads(str(text))
             else:
@@ -42,16 +44,20 @@ class RankingManager:
                     text = response.read().decode("utf-8")
                     return json.loads(text)
         except Exception as e:
+            self.sync_error = str(e)
             print(f"Aviso de sincronização com a planilha: {e}")
             return None
 
     async def sync_from_cloud(self):
         """Busca o contador global e os rankings atualizados em tempo real."""
         self.is_syncing = True
-        res = await self._request({"action": "get"})
-        if res and "rankings" in res:
-            self.data = res
-        self.is_syncing = False
+        self.sync_error = ""
+        try:
+            res = await self._request({"action": "get"})
+            if res and "rankings" in res:
+                self.data = res
+        finally:
+            self.is_syncing = False
 
     async def register_player_access(self, player_name):
         """Envia o acesso do jogador para a aba 'Acessos' da Planilha Google."""
