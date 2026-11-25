@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -9,6 +10,22 @@ GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzC3lBc9BXnlNZNn-Ax
 IS_WEB = sys.platform in ("emscripten", "wasi")
 if IS_WEB:
     import platform
+
+MESES = {
+    "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04",
+    "May": "05", "Jun": "06", "Jul": "07", "Aug": "08",
+    "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12",
+}
+
+
+def formatar_data_br(texto_data):
+    s = str(texto_data).strip()
+    m = re.search(r"[A-Za-z]{3}\s+([A-Za-z]{3})\s+(\d{2})\s+\d{2}(\d{2})\s+(\d{2}):(\d{2})", s)
+    if m:
+        mes = MESES.get(m.group(1), "01")
+        dia, ano, hora, minuto = m.group(2), m.group(3), m.group(4), m.group(5)
+        return f"{dia}/{mes}/{ano} {hora}H{minuto}"
+    return s
 
 
 class RankingManager:
@@ -112,8 +129,9 @@ class RankingManager:
     async def register_player_access(self, name):
         return await self.register_player(name)
 
-    async def submit_score(self, mode, score, difficulty="-"):
-        if not self.player_name:
+    async def add_score(self, mode, player_name, score, difficulty="-"):
+        clean_name = (player_name or self.player_name or "Anônimo").strip()
+        if not clean_name:
             return False
 
         self.is_syncing = True
@@ -122,7 +140,7 @@ class RankingManager:
         data = await self._request({
             "action": "score",
             "mode": mode,
-            "name": self.player_name,
+            "name": clean_name,
             "score": int(score),
             "difficulty": str(difficulty),
         })
@@ -133,8 +151,11 @@ class RankingManager:
             return True
         return False
 
+    async def submit_score(self, mode, score, difficulty="-"):
+        return await self.add_score(mode, self.player_name, score, difficulty)
+
     async def record_score(self, mode, score, difficulty="-"):
-        return await self.submit_score(mode, score, difficulty)
+        return await self.add_score(mode, self.player_name, score, difficulty)
 
     async def refresh_all(self):
         self.is_syncing = True
@@ -145,11 +166,20 @@ class RankingManager:
         self.is_syncing = False
         if data:
             self.total_players_count = int(data.get("total_players_count", 0))
-            self.registered_players = data.get("registered_players", [])
+
+            players = data.get("registered_players", [])
+            for p in players:
+                if isinstance(p, dict) and "timestamp" in p:
+                    p["timestamp"] = formatar_data_br(p["timestamp"])
+            self.registered_players = players
+
             rankings_data = data.get("rankings", {})
-            self.rankings["campaign"] = rankings_data.get("campaign", [])
-            self.rankings["multiplayer"] = rankings_data.get("multiplayer", [])
-            self.rankings["target"] = rankings_data.get("target", [])
+            for mode_key in ("campaign", "multiplayer", "target"):
+                entries = rankings_data.get(mode_key, [])
+                for item in entries:
+                    if isinstance(item, dict) and "timestamp" in item:
+                        item["timestamp"] = formatar_data_br(item["timestamp"])
+                self.rankings[mode_key] = entries
             return True
         return False
 

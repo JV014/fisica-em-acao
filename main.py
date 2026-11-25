@@ -46,6 +46,7 @@ REGISTER_PLAYER = 16
 REGISTER_P2 = 17
 RANKING = 18
 
+
 async def main():
     pygame.init()
     try:
@@ -118,7 +119,8 @@ async def main():
                         pygame.mixer.music.unpause()
 
                 if event.key == pygame.K_ESCAPE:
-                    if game_state in [FREE_LAB, EXPLORATION, TARGET_CHALLENGE, SIMULATION, MULTIPLAYER, MULTIPLAYER_INTRO, EXPLORATION_INTRO, TARGET_INTRO, LEVEL_SELECT, RANKING]:
+                    if game_state in [FREE_LAB, EXPLORATION, TARGET_CHALLENGE, SIMULATION, MULTIPLAYER, MULTIPLAYER_INTRO, EXPLORATION_INTRO, TARGET_INTRO, LEVEL_SELECT, RANKING, RESULT, CREDITS]:
+                        car.x = 50
                         game_state = MENU
 
             # ---------------- CADASTRO INICIAL DO JOGADOR ----------------
@@ -150,7 +152,7 @@ async def main():
                         menu.selected = (menu.selected + 1) % len(menu.options)
                     elif event.key == pygame.K_UP:
                         menu.selected = (menu.selected - 1) % len(menu.options)
-                    elif event.key == pygame.K_RETURN:
+                    elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                         if menu.selected == 0:  # Jogar Campanha
                             selected_mode = "campaign"
                             campaign_saved = False
@@ -181,6 +183,7 @@ async def main():
                         question.phase = 1
                         question.index = 0
                         question.score = 0
+                        car.x = 50
                         exploration.reset()
                         road.level = "easy"
                         game_state = INTRO
@@ -192,23 +195,23 @@ async def main():
 
             # ---------------- INTRO CAMPANHA ----------------
             elif game_state == INTRO:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     game_state = QUESTION
 
             # ---------------- INTRO MULTIPLAYER ----------------
             elif game_state == MULTIPLAYER_INTRO:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     game_state = MULTIPLAYER
 
             # ---------------- INTRO EXPLORAÇÃO / LAB LIVRE ----------------
             elif game_state == EXPLORATION_INTRO:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     free_lab.reset_projectile()
                     game_state = FREE_LAB
 
             # ---------------- INTRO TIRO AO ALVO ----------------
             elif game_state == TARGET_INTRO:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     target_challenge.set_mode(is_campaign=False)
                     game_state = TARGET_CHALLENGE
 
@@ -220,16 +223,16 @@ async def main():
                         question.selected = (question.selected + 1) % len(current[question.index]["options"])
                     elif event.key == pygame.K_UP:
                         question.selected = (question.selected - 1) % len(current[question.index]["options"])
-                    elif event.key == pygame.K_RETURN:
+                    elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                         feedback.set_feedback(question.check())
                         game_state = FEEDBACK
 
             # ---------------- FEEDBACK DA RESPOSTA ----------------
             elif game_state == FEEDBACK:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     if current_difficulty == "fundamental" or question.phase < 4:
                         question.update_score(feedback.correct)
-                    
+
                     question.next_question()
                     current_list = question.get_current_questions()
 
@@ -274,10 +277,10 @@ async def main():
                         else:
                             simulation.start(car)
                             game_state = SIMULATION
-        
+
             # ---------------- APRESENTAÇÃO DE FASE ----------------
             elif game_state == PHASE:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     if question.phase == 4 and current_difficulty == "medio":
                         exploration.reset_projectile()
                         game_state = EXPLORATION
@@ -302,25 +305,25 @@ async def main():
                         multiplayer.score_saved = True
                         asyncio.create_task(ranking_manager.add_score("multiplayer", multiplayer.p1_name, multiplayer.score_p1, current_difficulty))
                         asyncio.create_task(ranking_manager.add_score("multiplayer", multiplayer.p2_name, multiplayer.score_p2, current_difficulty))
-                    if event.type == pygame.KEYDOWN and event.key in [pygame.K_RETURN, pygame.K_ESCAPE]:
+                    if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_ESCAPE):
                         game_state = MENU
                 else:
                     multiplayer.handle_event(event)
 
             # ---------------- TIRO AO ALVO ----------------
             elif game_state == TARGET_CHALLENGE:
-                target_challenge.handle_event(event)
+                action = target_challenge.handle_event(event)
                 if target_challenge.all_completed and not target_challenge.campaign_mode and not target_challenge.score_saved:
                     target_challenge.score_saved = True
                     asyncio.create_task(ranking_manager.add_score("target", current_player_name, target_challenge.score))
 
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                    if target_challenge.campaign_mode and (target_challenge.hit or target_challenge.attempts_left <= 0):
+                if action == "exit":
+                    if target_challenge.campaign_mode:
                         if target_challenge.hit and not target_challenge.score_added:
                             question.score += 100
                             target_challenge.score_added = True
                         game_state = RESULT
-                    elif target_challenge.all_completed and not target_challenge.campaign_mode:
+                    else:
                         game_state = MENU
 
             # ---------------- RESULTADO FINAL DA CAMPANHA ----------------
@@ -328,12 +331,13 @@ async def main():
                 if not campaign_saved:
                     campaign_saved = True
                     asyncio.create_task(ranking_manager.add_score("campaign", current_player_name, question.score, current_difficulty))
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_ESCAPE):
+                    car.x = 50
                     game_state = MENU
-            
+
             # ---------------- CRÉDITOS ----------------
             elif game_state == CREDITS:
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_ESCAPE):
                     game_state = MENU
 
         # ===============================
@@ -427,6 +431,7 @@ async def main():
 
     pygame.quit()
     sys.exit()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
