@@ -1,41 +1,40 @@
+import asyncio
 import json
 import sys
-import urllib.request
 import urllib.parse
+import urllib.request
 
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzC3lBc9BXnlNZNn-Axa9hPgeNgpcHSB5nOoOTKkxXJWA2el0DRcJSnb37QyRvhWFfMPA/exec"
 
-IS_WEB = (sys.platform == "emscripten")
-
+IS_WEB = sys.platform in ("emscripten", "wasi")
 if IS_WEB:
     import platform
 
+
 class RankingManager:
     def __init__(self):
-        self.url = GOOGLE_SCRIPT_URL
-        self.is_syncing = False
-        self.sync_error = ""
-        self.data = {
-            "total_players_count": 0,
-            "registered_players": [],
-            "rankings": {
-                "campaign": [],
-                "multiplayer": [],
-                "target": []
-            }
+        self.player_name = ""
+        self.total_players_count = 0
+        self.registered_players = []
+        self.rankings = {
+            "campaign": [],
+            "multiplayer": [],
+            "target": [],
         }
+        self.sync_error = ""
+        self.is_syncing = False
 
     async def _request(self, params):
-        if not self.url or "COLE_SUA_URL" in self.url:
+        if not GOOGLE_SCRIPT_URL or "COLE_AQUI" in GOOGLE_SCRIPT_URL:
+            self.sync_error = "URL da planilha não configurada."
             return None
 
         query_string = urllib.parse.urlencode(params)
-        full_url = f"{self.url}?{query_string}"
+        full_url = f"{GOOGLE_SCRIPT_URL}?{query_string}"
 
         try:
             if IS_WEB:
-                opts = platform.window.eval('({method: "GET", redirect: "follow", credentials: "omit"})')
-                resp = await platform.window.fetch(full_url, opts)
+                resp = await platform.window.fetch(full_url)
                 text = await resp.text()
                 return json.loads(str(text))
             else:
@@ -48,48 +47,64 @@ class RankingManager:
             print(f"Aviso de sincronização com a planilha: {e}")
             return None
 
-    async def sync_from_cloud(self):
-        """Busca o contador global e os rankings atualizados em tempo real."""
+    async def register_player(self, name):
+        clean_name = name.strip()
+        if not clean_name:
+            return False
+
+        self.player_name = clean_name
         self.is_syncing = True
         self.sync_error = ""
-        try:
-            res = await self._request({"action": "get"})
-            if res and "rankings" in res:
-                self.data = res
-        finally:
-            self.is_syncing = False
 
-    async def register_player_access(self, player_name):
-        """Envia o acesso do jogador para a aba 'Acessos' da Planilha Google."""
-        clean_name = player_name.strip()
-        if not clean_name:
-            clean_name = "Anônimo"
-
-        res = await self._request({
+        data = await self._request({
             "action": "register",
-            "name": clean_name
+            "name": clean_name,
         })
-        if res and "total_players_count" in res:
-            self.data["total_players_count"] = res["total_players_count"]
-        return clean_name
 
-    async def add_score(self, mode, player_name, score, difficulty=None):
-        """Envia a pontuação para a aba correspondente da Planilha Google."""
-        diff_val = difficulty if difficulty else "-"
-        await self._request({
+        self.is_syncing = False
+        if data and data.get("status") == "ok":
+            self.total_players_count = int(data.get("total_players_count", self.total_players_count))
+            await self.refresh_all()
+            return True
+        return False
+
+    async def submit_score(self, mode, score, difficulty="-"):
+        if not self.player_name:
+            return False
+
+        self.is_syncing = True
+        self.sync_error = ""
+
+        data = await self._request({
             "action": "score",
             "mode": mode,
-            "name": player_name,
-            "score": score,
-            "difficulty": diff_val
+            "name": self.player_name,
+            "score": int(score),
+            "difficulty": str(difficulty),
         })
-        await self.sync_from_cloud()
 
-    def get_ranking(self, mode):
-        return self.data["rankings"].get(mode, [])
+        self.is_syncing = False
+        if data and data.get("status") == "ok":
+            await self.refresh_all()
+            return True
+        return False
 
-    def get_total_players(self):
-        return self.data.get("total_players_count", 0)
+    async def refresh_all(self):
+        self.is_syncing = True
+        self.sync_error = ""
 
-    def get_first_100_players(self):
-        return self.data.get("registered_players", [])
+        data = await self._request({"action": "get"})
+
+        self.is_syncing = False
+        if data:
+            self.total_players_count = int(data.get("total_players_count", 0))
+            self.registered_players = data.get("registered_players", [])
+            rankings_data = data.get("rankings", {})
+            self.rankings["campaign"] = rankings_data.get("campaign", [])
+            self.rankings["multiplayer"] = rankings_data.get("multiplayer", [])
+            self.rankings["target"] = rankings_data.get("target", [])
+            return True
+        return False
+
+
+ranking_manager = RankingManager()
